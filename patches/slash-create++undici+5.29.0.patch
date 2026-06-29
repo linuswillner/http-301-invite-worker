@@ -1,0 +1,14 @@
+diff --git a/node_modules/slash-create/node_modules/undici/lib/core/connect.js b/node_modules/slash-create/node_modules/undici/lib/core/connect.js
+index 3309117..8cc33a6 100644
+--- a/node_modules/slash-create/node_modules/undici/lib/core/connect.js
++++ b/node_modules/slash-create/node_modules/undici/lib/core/connect.js
+@@ -102,7 +102,8 @@ function buildConnector ({ allowH2, maxCachedSessions, socketPath, timeout, ...o
+         session,
+         localAddress,
+         // TODO(HTTP/2): Add support for h2c
+-        ALPNProtocols: allowH2 ? ['http/1.1', 'h2'] : ['http/1.1'],
++        // FIXME: Temporary workaround because workerd throws if you pass any ALPNOptions at all to tls.connect(): https://github.com/cloudflare/workerd/pull/6546
++        ALPNProtocols: undefined,
+         socket: httpSocket, // upgrade socket connection
+         port: port || 443,
+         host: hostname

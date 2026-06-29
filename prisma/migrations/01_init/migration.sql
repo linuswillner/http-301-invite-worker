@@ -1,0 +1,2 @@
+-- This migration is intentionally empty so that Prisma will not crash out
+-- because _cf_KV exists before any migrations have been applied

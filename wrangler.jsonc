@@ -17,8 +17,9 @@
 	"d1_databases": [
 		{
 			"binding": "db",
-			"database_name": "http-301-invite-manager",
-			"database_id": "c9b3ee54-a67b-40f2-98bb-d443da32ac2b"
+			"database_name": "http-301-invite-worker",
+			"database_id": "6912e1ff-5be5-43df-b6b2-4054fa240cfb",
+      "migrations_dir": "prisma/migrations"
 		}
 	]
 	/**

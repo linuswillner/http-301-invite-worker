@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "cloudflare"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Invite {
+  id            String       @id @default(cuid(2))
+  inviteeID     String
+  invitee       UserMetadata @relation("Invitee", fields: [inviteeID], references: [id])
+  inviterID     String
+  inviter       UserMetadata @relation("Inviter", fields: [inviterID], references: [id])
+  createdAt     DateTime     @default(now())
+  interactionID String
+  valid         Boolean      @default(false)
+  description   String
+  code          String?
+}
+
+model UserMetadata {
+  id          String   @id
+  username    String
+  displayName String
+  avatarURL   String
+  invitedIn   Invite[] @relation("Invitee")
+  invited     Invite[] @relation("Inviter")
+}
