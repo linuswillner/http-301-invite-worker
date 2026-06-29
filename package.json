@@ -1,0 +1,35 @@
+{
+  "name": "http-301-invite-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "test": "vitest",
+    "cf-typegen": "wrangler types",
+    "lint": "eslint src test --ext .ts"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.12.4",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.0.1",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.7.0",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.1",
+    "typescript": "^5.5.2",
+    "typescript-eslint": "^8.62.0",
+    "vitest": "~3.2.0",
+    "wrangler": "^4.105.0"
+  },
+  "allowScripts": {
+    "esbuild@0.27.3": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20260310.1": true,
+    "workerd@1.20260625.1": true,
+    "sharp@0.34.5": true
+  }
+}
