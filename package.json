@@ -8,7 +8,7 @@
     "test": "vitest",
     "cf:typegen": "wrangler types",
     "cf:mktunnel": "wrangler tunnel create http-301-invite-worker",
-    "sync": "slash-up sync",
+    "sync": "./scripts/sync.sh",
     "lint": "eslint src test --ext .ts",
     "postinstall": "patch-package"
   },
