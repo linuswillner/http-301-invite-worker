@@ -6,7 +6,8 @@ import {
   TextInputStyle,
   ButtonStyle
 } from 'slash-create/web'
-import { discordAPI, getPendingInvites } from '../discord-api'
+import { addMonths, subMonths } from 'date-fns'
+import { discordAPI } from '../discord-api'
 import { RESTGetAPIGuildMemberResult, RESTGetAPIUserResult, Routes } from 'discord-api-types/v10'
 import logger from '../logger'
 import { formatInvitee, formatInviter, makeInviteEmbed } from '../invitation'
@@ -22,6 +23,25 @@ export default class InviteCommand extends SlashCommand {
   }
 
   async run(ctx: CommandContext) {
+    const latestInviteWithinCadence = await prisma.invite.findFirst({
+      where: {
+        inviter: { id: ctx.user.id },
+        createdAt: { gte: subMonths(new Date(), Number(process.env.INVITE_CADENCE_MONTHS)) }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    if (latestInviteWithinCadence) {
+      const timeOfNextInvite = addMonths(latestInviteWithinCadence.createdAt, Number(process.env.INVITE_CADENCE_MONTHS))
+
+      const timeInSeconds = (timeOfNextInvite.getTime() / 1000).toFixed(0)
+
+      return await ctx.send({
+        ephemeral: true,
+        content: `⚠️ You have already invited someone within the last ${process.env.INVITE_CADENCE_MONTHS} months. You may invite someone again on <t:${timeInSeconds}:F> (<t:${timeInSeconds}:R>).\n\nIf you've lost the invite link or are trying to generate a new one, ask the sudo team for assistance.`
+      })
+    }
+
     await ctx.sendModal(
       {
         title: 'Invite a user to HTTP 301',
@@ -104,24 +124,6 @@ export default class InviteCommand extends SlashCommand {
             `Invitee could not be found in server; this is expected because they are not a member yet. (Error: ${err instanceof Error ? err.message : String(err)})`
           )
           logger.trace(err)
-        }
-
-        const existingConfirmedInvites = await prisma.invite.findMany({
-          where: {
-            invitee: { id: invitee.id },
-            code: { not: null }
-          }
-        })
-
-        const pendingInvites = await getPendingInvites()
-
-        for (const invite of existingConfirmedInvites) {
-          if (pendingInvites.some((i) => i.code === invite.code)) {
-            return await mctx.send({
-              ephemeral: true,
-              content: `⚠️ There is already a pending invite for this user. If you've lost the invite code or are trying to generate a new one, ask the sudo team for assistance.`
-            })
-          }
         }
 
         // Update invitee user info
