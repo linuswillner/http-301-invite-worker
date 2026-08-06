@@ -1,10 +1,14 @@
-# http-301-invite-worker
+# 📩 HTTP 301 invite worker
 
-Cloudflare Worker for managing invitations to HTTP 301.
+Discord bot running as a Cloudflare Worker for managing invitations to HTTP 301.
 
-Users create invites using slash commands; invites are posted to a public log channel for transparency. Invites are created natively using Discord's [targeted invites feature](https://docs.discord.com/developers/tutorials/using-community-invites#target-users-example-creating-targeted-supporter-invites), only accessible via the API. The invitation is valid once and only usable by the invitee; to all others; the invites will show up as "invalid invite".
+The beef: Members create invites for new members to the community using a slash command, which triggers a form interaction where they provide the user ID of the invitee and some context for the invitiation. The bot parses the user account details of the invitee and provides a preview for the inviter, letting the inviter confirm or cancel the invite. Once confirmed, the invite is posted to a public log channel for record-keeping, and the inviter is provided with a [targeted invite](https://docs.discord.com/developers/tutorials/using-community-invites#target-users-example-creating-targeted-supporter-invites) to give to the invitee.
 
-Keystone technology choices:
+With the native targeted invites feature, combined with creating an invite link that is only valid once, we achieve numerous security and integrity benefits, chiefly that we circumvent the need for a manual verification process to ensure that the invite hasn't spread to unintended audiences.
+
+The system also implements a configurable invite cadence, letting members create an invite for someone only once every X months. The system lets people check when their next invite will be available with a different slash command. There is also an escape hatch for server owners to regenerate the invite, should it happen to expire or become lost somehow.
+
+**💻 Keystone technology choices:**
 
 - As it says on the tin, the entire system runs on a Cloudflare Worker
 - Cloudflare D1 is used as a datastore and interacted with using Prisma, as the closest available storage that does not need extra setup; Prisma was chosen to eliminate DB driver boilerplate
