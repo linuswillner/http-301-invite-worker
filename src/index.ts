@@ -9,6 +9,10 @@ let slash: SlashCreator
 
 export default {
   async fetch(request, env, ctx): Promise<Response> {
+    if (request.headers.get('user-agent') !== 'Discord-Interactions/1.0 (+https://discord.com)') {
+      return new Response('Not a Discord interaction', { status: 403 })
+    }
+
     if (!slash) {
       slash = makeSlashCreator(env, slashCreateCFServer)
     }
