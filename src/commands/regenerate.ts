@@ -166,7 +166,7 @@ export default class RegenerateCommand extends SlashCommand {
         })
       } catch (err) {
         logger.error(`Failed to regenerate invite link:`)
-        logger.error(err)
+        logger.error(err instanceof Error ? err.stack : err)
 
         await bctx.editParent({
           content: '❌ Failed to regenerate invite link.',

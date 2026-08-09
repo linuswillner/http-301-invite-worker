@@ -94,7 +94,7 @@ export async function confirmInvite(ctx: ComponentContext) {
       })
     } catch (err) {
       logger.error(`Failed to confirm invitation:`)
-      logger.error(err)
+      logger.error(err instanceof Error ? err.stack : err)
 
       return await ctx.send({
         ephemeral: true,
@@ -103,7 +103,7 @@ export async function confirmInvite(ctx: ComponentContext) {
     }
   } catch (err) {
     logger.error(`Failed to confirm invite:`)
-    logger.error(err)
+    logger.error(err instanceof Error ? err.stack : err)
   }
 }
 
@@ -122,7 +122,7 @@ export async function cancelInvite(ctx: ComponentContext) {
       await prisma.invite.delete({ where: { id: invite.id } })
     } catch (err) {
       logger.error(`Failed to delete invite:`)
-      logger.error(err)
+      logger.error(err instanceof Error ? err.stack : err)
 
       return await ctx.send({
         ephemeral: true,
@@ -133,6 +133,6 @@ export async function cancelInvite(ctx: ComponentContext) {
     await ctx.edit(ctx.message.id, { content: '✅ Invitation cancelled.', components: [], embeds: [] })
   } catch (err) {
     logger.error(`Failed to cancel invite:`)
-    logger.error(err)
+    logger.error(err instanceof Error ? err.stack : err)
   }
 }

@@ -102,7 +102,7 @@ export default class InviteCommand extends SlashCommand {
           invitee = (await discordAPI.get(Routes.user(id))) as RESTGetAPIUserResult
         } catch (err) {
           logger.error('Failed to fetch invitee information:')
-          logger.error(err)
+          logger.error(err instanceof Error ? err.stack : err)
           return await mctx.send({
             ephemeral: true,
             content: `❌ Could not find user with ID \`${id}\`. Are you sure you pasted in the correct ID?`
