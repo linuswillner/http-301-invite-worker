@@ -10,7 +10,7 @@
     "cf:mktunnel": "wrangler tunnel create http-301-invite-worker",
     "sync": "./scripts/sync.sh",
     "lint": "eslint src test --ext .ts",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package && prisma generate"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.1",
