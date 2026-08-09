@@ -1,7 +1,7 @@
 import { CloudflareWorkerServer, SlashCreator } from 'slash-create'
 import commands from './commands'
 import logger from './logger'
-import { cancelInvite, confirmInvite } from './invitation'
+import { cancelInvite, confirmInvite, handleInviteModal } from './invitation'
 
 export function makeSlashCreator(env: Env, server: CloudflareWorkerServer) {
   const creator = new SlashCreator({
@@ -24,6 +24,9 @@ export function makeSlashCreator(env: Env, server: CloudflareWorkerServer) {
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   creator.registerGlobalComponent('cancel-invite', cancelInvite)
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  creator.registerGlobalModal('invite', handleInviteModal)
 
   return creator
 }

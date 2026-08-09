@@ -1,11 +1,18 @@
-import { ComponentContext, MessageEmbedOptions, User } from 'slash-create'
+import {
+  ButtonStyle,
+  ComponentContext,
+  ComponentType,
+  MessageEmbedOptions,
+  ModalInteractionContext,
+  User
+} from 'slash-create'
 import { calculateUserDefaultAvatarIndex } from '@discordjs/rest'
-import { RESTGetAPIUserResult } from 'discord-api-types/v10'
+import { RESTGetAPIGuildMemberResult, RESTGetAPIUserResult, Routes } from 'discord-api-types/v10'
 import { Prisma } from './generated/prisma/client'
 import { FullInvite } from './types'
 import { prisma } from './db'
 import logger from './logger'
-import { createInviteLink, sendToInviteLog } from './discord-api'
+import { createInviteLink, discordAPI, sendToInviteLog } from './discord-api'
 
 export const avatarURL = (userID: string, avatarID: string) =>
   `https://cdn.discordapp.com/avatars/${userID}/${avatarID}.${avatarID?.startsWith('a_') ? 'gif' : 'png'}`
@@ -54,6 +61,103 @@ export function formatInviter(inviter: User): Prisma.UserMetadataCreateInput {
   }
 }
 
+export async function handleInviteModal(mctx: ModalInteractionContext) {
+  const id = String(mctx.values.id)
+
+  logger.info(
+    `User ${mctx.user.globalName} (username \`${mctx.user.username}\`, ID \`${mctx.user.id}\`) is inviting user ${id}.`
+  )
+
+  // Try to get invitee user information, validating whether they are a real user
+  let invitee: RESTGetAPIUserResult
+
+  try {
+    invitee = (await discordAPI.get(Routes.user(id))) as RESTGetAPIUserResult
+  } catch (err) {
+    logger.error('Failed to fetch invitee information:')
+    logger.error(err instanceof Error ? err.stack : err)
+    return await mctx.send({
+      ephemeral: true,
+      content: `❌ Could not find user with ID \`${id}\`. Are you sure you pasted in the correct ID?`
+    })
+  }
+
+  // Try to get their guild membership to check if they're already here
+  try {
+    const member = (await discordAPI.get(Routes.guildMember(mctx.guildID!, invitee.id))) as RESTGetAPIGuildMemberResult
+
+    return await mctx.send({
+      ephemeral: true,
+      content: `⚠️ User ${member.user.global_name} (username \`${member.user.username}\`, ID \`${member.user.id}\`) is already a member of this server.`
+    })
+  } catch (err) {
+    logger.info(
+      `Invitee could not be found in server; this is expected because they are not a member yet. (Error: ${err instanceof Error ? err.message : String(err)})`
+    )
+    logger.trace(err)
+  }
+
+  // Update invitee user info
+  await prisma.userMetadata.upsert({
+    where: { id: invitee.id },
+    create: formatInvitee(invitee),
+    update: formatInvitee(invitee)
+  })
+
+  // Update inviter user info
+  await prisma.userMetadata.upsert({
+    where: { id: mctx.user.id },
+    create: formatInviter(mctx.user),
+    update: formatInviter(mctx.user)
+  })
+
+  const invite = await prisma.invite.create({
+    data: {
+      interactionID: mctx.interactionID,
+      description: String(mctx.values.description),
+      invitee: {
+        connect: { id: invitee.id }
+      },
+      inviter: {
+        connect: { id: mctx.user.id }
+      }
+    },
+    include: {
+      invitee: true,
+      inviter: true
+    }
+  })
+
+  const embed = makeInviteEmbed(invite)
+
+  await mctx.send({
+    ephemeral: true,
+    content:
+      'This is a preview of your invitation. Please confirm the user is correct and it is otherwise to your liking.',
+    embeds: [embed],
+    components: [
+      {
+        type: ComponentType.ACTION_ROW,
+        components: [
+          {
+            type: ComponentType.BUTTON,
+            style: ButtonStyle.SUCCESS,
+            custom_id: 'confirm-invite',
+            label: "Yes, that's correct",
+            emoji: { name: '✅' }
+          },
+          {
+            type: ComponentType.BUTTON,
+            style: ButtonStyle.DANGER,
+            custom_id: 'cancel-invite',
+            label: 'No, cancel'
+          }
+        ]
+      }
+    ]
+  })
+}
+
 export async function confirmInvite(ctx: ComponentContext) {
   try {
     const invite = await prisma.invite.findFirst({
@@ -94,10 +198,9 @@ export async function confirmInvite(ctx: ComponentContext) {
 
       await sendToInviteLog(ctx.message.embeds[0])
 
-      await ctx.edit(ctx.message.id, {
+      await ctx.send({
         content: `✅ Invitation confirmed. Here is the invite link to share with the invitee: https://discord.gg/${code}`,
-        components: [],
-        embeds: []
+        ephemeral: true
       })
     } catch (err) {
       logger.error(`Failed to confirm invitation:`)
@@ -137,7 +240,7 @@ export async function cancelInvite(ctx: ComponentContext) {
       })
     }
 
-    await ctx.edit(ctx.message.id, { content: '✅ Invitation cancelled.', components: [], embeds: [] })
+    await ctx.send({ content: '✅ Invitation cancelled.', ephemeral: true })
   } catch (err) {
     logger.error(`Failed to cancel invite:`)
     logger.error(err instanceof Error ? err.stack : err)
