@@ -70,6 +70,13 @@ export async function confirmInvite(ctx: ComponentContext) {
       })
     }
 
+    if (invite.code) {
+      return await ctx.send({
+        ephemeral: true,
+        content: '⚠️ That invitation has already been confirmed.'
+      })
+    }
+
     try {
       const { code } = await createInviteLink(invite)
 
