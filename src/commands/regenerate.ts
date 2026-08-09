@@ -1,12 +1,4 @@
-import {
-  AutocompleteContext,
-  ButtonStyle,
-  CommandContext,
-  CommandOptionType,
-  ComponentType,
-  SlashCommand,
-  SlashCreator
-} from 'slash-create'
+import { AutocompleteContext, CommandContext, CommandOptionType, SlashCommand, SlashCreator } from 'slash-create'
 import logger from '../logger'
 import { prisma } from '../db'
 import { createInviteLink, discordAPI, getPendingInvites } from '../discord-api'
@@ -120,67 +112,28 @@ export default class RegenerateCommand extends SlashCommand {
       logger.trace(err)
     }
 
-    await ctx.send({
-      content: `Are you sure you want to regenerate the invite link for user ${invite.invitee.displayName} (${invite.invitee.username}, \`${invite.invitee.id}\`)?`,
-      components: [
-        {
-          type: ComponentType.ACTION_ROW,
-          components: [
-            {
-              type: ComponentType.BUTTON,
-              style: ButtonStyle.SUCCESS,
-              custom_id: 'confirm-regenerate',
-              label: 'Yes, regenerate',
-              emoji: { name: '✅' }
-            },
-            {
-              type: ComponentType.BUTTON,
-              style: ButtonStyle.DANGER,
-              custom_id: 'cancel-regenerate',
-              label: 'No, cancel'
-            }
-          ]
+    try {
+      const { code } = await createInviteLink(invite)
+
+      await prisma.invite.update({
+        where: { id: invite.id },
+        data: {
+          code
         }
-      ],
-      ephemeral: true
-    })
-
-    // Required for registering interactions on ephemeral messages to work
-    await ctx.fetch()
-
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    ctx.registerComponent('confirm-regenerate', async (bctx) => {
-      try {
-        const { code } = await createInviteLink(invite)
-
-        await prisma.invite.update({
-          where: { id: invite.id },
-          data: {
-            code
-          }
-        })
-
-        await bctx.editParent({
-          content: `✅ Invite regenerated. Here is the link: https://discord.gg/${code}`,
-          components: []
-        })
-      } catch (err) {
-        logger.error(`Failed to regenerate invite link:`)
-        logger.error(err instanceof Error ? err.stack : err)
-
-        await bctx.editParent({
-          content: '❌ Failed to regenerate invite link.',
-          components: []
-        })
-      }
-    })
-
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    ctx.registerComponent('cancel-regenerate', async (bctx) => {
-      await bctx.editParent({
-        content: '✅ Cancelled.',
-        components: []
       })
-    })
+
+      await ctx.send({
+        content: `✅ Invite regenerated. Here is the link: https://discord.gg/${code}`,
+        ephemeral: true
+      })
+    } catch (err) {
+      logger.error(`Failed to regenerate invite link:`)
+      logger.error(err instanceof Error ? err.stack : err)
+
+      await ctx.send({
+        content: '❌ Failed to regenerate invite link.',
+        ephemeral: true
+      })
+    }
   }
 }
