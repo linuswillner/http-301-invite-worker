@@ -198,9 +198,10 @@ export async function confirmInvite(ctx: ComponentContext) {
 
       await sendToInviteLog(ctx.message.embeds[0])
 
-      await ctx.send({
+      await ctx.editParent({
         content: `✅ Invitation confirmed. Here is the invite link to share with the invitee: https://discord.gg/${code}`,
-        ephemeral: true
+        components: [],
+        embeds: []
       })
     } catch (err) {
       logger.error(`Failed to confirm invitation:`)
@@ -240,7 +241,7 @@ export async function cancelInvite(ctx: ComponentContext) {
       })
     }
 
-    await ctx.send({ content: '✅ Invitation cancelled.', ephemeral: true })
+    await ctx.editParent({ content: '✅ Invitation cancelled.', embeds: [], components: [] })
   } catch (err) {
     logger.error(`Failed to cancel invite:`)
     logger.error(err instanceof Error ? err.stack : err)
