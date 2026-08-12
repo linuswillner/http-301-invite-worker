@@ -82,6 +82,22 @@ export async function handleInviteModal(mctx: ModalInteractionContext) {
     })
   }
 
+  // Reject invalid user types
+  if (invitee.bot || invitee.system) {
+    return await mctx.send({
+      ephemeral: true,
+      content: `❌ User with ID \`${id}\` (username: \`${invitee.username}\`) is a bot or system user that cannot accept an invite.`
+    })
+  }
+
+  // Reject deleted users
+  if (invitee.username.startsWith('deleted_user')) {
+    return await mctx.send({
+      ephemeral: true,
+      content: `❌ User with ID \`${id}\` (username: \`${invitee.username}\`) is a deleted user.`
+    })
+  }
+
   // Try to get their guild membership to check if they're already here
   try {
     const member = (await discordAPI.get(Routes.guildMember(mctx.guildID!, invitee.id))) as RESTGetAPIGuildMemberResult
