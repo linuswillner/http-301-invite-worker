@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Syncs slash commands to Discord
 
 set -euo pipefail
 
