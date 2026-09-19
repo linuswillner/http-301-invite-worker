@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy",
+    "deploy": "npm run sync && wrangler deploy",
     "dev": "wrangler dev --tunnel --tunnel-name http-301-invite-worker",
     "test": "vitest",
     "cf:typegen": "wrangler types",
     "cf:mktunnel": "wrangler tunnel create http-301-invite-worker",
-    "sync": "./scripts/sync.sh",
+    "sync": "scripts/sync.sh",
+    "sync:local": "./scripts/sync.sh --local",
     "lint": "eslint src test --ext .ts",
     "preinstall": "mkdir -p .wrangler/state/v3/d1/miniflare-D1DatabaseObject",
     "postinstall": "patch-package && prisma generate"

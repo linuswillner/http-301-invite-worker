@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-source .env
+if [[ $* == *--local* ]]; then
+  source .env
+fi
 
 npx slash-up sync \
    --token "$DISCORD_BOT_TOKEN" \
