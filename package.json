@@ -10,6 +10,7 @@
     "cf:mktunnel": "wrangler tunnel create http-301-invite-worker",
     "sync": "./scripts/sync.sh",
     "lint": "eslint src test --ext .ts",
+    "preinstall": "mkdir -p .wrangler/state/v3/d1/miniflare-D1DatabaseObject",
     "postinstall": "patch-package && prisma generate"
   },
   "dependencies": {
